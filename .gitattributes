@@ -8,3 +8,43 @@
 # See golang.org/issue/9281
 
 * -text
+CallbackHandler handler = new RanchCallbackHandler(userName, password);
+
+try {
+    LoginContext loginContext = new LoginContext("RanchLogin", handler);
+    // starts the actual login
+    loginContext.login();
+} catch (LoginException e) {
+    // log  error (failed to authenticate the user - do something about it)
+    e.printStackTrace();
+}RanchLogin {
+    com.javaranch.auth.RanchLoginModule required;
+}
+public boolean login() throws LoginException {
+    boolean returnValue = true;
+	if (callbackHandler == null){
+        throw new LoginException("No callback handler supplied.");
+    }
+
+    Callback[] callbacks = new Callback[2];
+    callbacks[0] = new NameCallback("Username");
+    callbacks[1] = new PasswordCallback("Password", false);
+
+    try {
+        callbackHandler.handle(callbacks);
+        String userName = ((NameCallback) callbacks[0]).getName();
+        char [] passwordCharArray = ((PasswordCallback) callbacks[1]).getPassword();
+        String password = new String(passwordCharArray);
+        //--> authenticate if username is the same as password (yes, this is a somewhat simplistic approach :-)
+        returnValue = userName.equals(password);
+    } catch (IOException ioe)  {
+        ioe.printStackTrace();
+        throw new LoginException("IOException occured: "+ioex.getMessage());
+    } catch (UnsupportedCallbackException ucbe) {
+        ucbe.printStackTrace();
+        throw new LoginException("UnsupportedCallbackException encountered: "+ucbe.getMessage());
+    }
+
+    System.out.println("logged in");
+    return returnValue;
+}
